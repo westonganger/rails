@@ -1267,16 +1267,13 @@ class BasicsTest < ActiveRecord::TestCase
   end
 
   def test_current_scope_is_reset
-    Object.const_set :UnloadablePost, Class.new(ActiveRecord::Base)
+    Object.const_set(:UnloadablePost, Class.new(ActiveRecord::Base))
     UnloadablePost.current_scope = UnloadablePost.all
 
-    UnloadablePost.unloadable
     klass = UnloadablePost
     assert_not_nil ActiveRecord::Scoping::ScopeRegistry.current_scope(klass)
-    ActiveSupport::Dependencies.remove_unloadable_constants!
+    Object.class_eval { remove_const :UnloadablePost }
     assert_nil ActiveRecord::Scoping::ScopeRegistry.current_scope(klass)
-  ensure
-    Object.class_eval { remove_const :UnloadablePost } if defined?(UnloadablePost)
   end
 
   def test_marshal_round_trip
