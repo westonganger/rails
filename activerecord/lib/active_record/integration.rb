@@ -56,7 +56,7 @@ module ActiveRecord
     #   user_path(user)  # => "/users/Phusion"
     def to_param
       # We can't use alias_method here, because method 'id' optimizes itself on the fly.
-      id && id.to_s # Be sure to stringify the id for routes
+      send(self.class.to_param_column).to_s.presence
     end
 
     # Returns a stable cache key that can be used to identify this record.
@@ -158,6 +158,12 @@ module ActiveRecord
             end
           end
         end
+      end
+
+      # Defines the DB column in which you store the value of `to_param`
+      # Utilized as part of nested forms using `fields_for` and `accepts_nested_attributes_for`
+      def to_param_column
+        primary_key
       end
 
       def collection_cache_key(collection = all, timestamp_column = :updated_at) # :nodoc:

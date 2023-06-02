@@ -236,6 +236,8 @@ module ActiveRecord
     # of hashes can be used with hashes generated from HTTP/HTML parameters,
     # where there may be no natural way to submit an array of hashes.
     #
+    # If provide a method on your model `to_param_column` then by default `to_param` will utilize this value of this column to populate the fields_for form `[id]` field.
+    #
     # === Saving
     #
     # All changes to models, including the destruction of those marked for
@@ -508,7 +510,7 @@ module ActiveRecord
           association.target
         else
           attribute_ids = attributes_collection.filter_map { |a| a["id"] || a[:id] }
-          attribute_ids.empty? ? [] : association.scope.where(association.klass.primary_key => attribute_ids)
+          attribute_ids.empty? ? [] : association.scope.where(association.klass.to_param_column => attribute_ids)
         end
 
         attributes_collection.each do |attributes|
@@ -521,12 +523,12 @@ module ActiveRecord
             unless reject_new_record?(association_name, attributes)
               association.reader.build(attributes.except(*UNASSIGNABLE_KEYS))
             end
-          elsif existing_record = existing_records.detect { |record| record.id.to_s == attributes["id"].to_s }
+          elsif existing_record = existing_records.detect { |record| record.to_param.to_s == attributes["id"].to_s }
             unless call_reject_if(association_name, attributes)
               # Make sure we are operating on the actual object which is in the association's
               # proxy_target array (either by finding it, or adding it if not found)
               # Take into account that the proxy_target may have changed due to callbacks
-              target_record = association.target.detect { |record| record.id.to_s == attributes["id"].to_s }
+              target_record = association.target.detect { |record| record.to_param.to_s == attributes["id"].to_s }
               if target_record
                 existing_record = target_record
               else
@@ -610,9 +612,9 @@ module ActiveRecord
       end
 
       def raise_nested_attributes_record_not_found!(association_name, record_id)
-        model = self.class._reflect_on_association(association_name).klass.name
+        model = self.class._reflect_on_association(association_name).klass
         raise RecordNotFound.new("Couldn't find #{model} with ID=#{record_id} for #{self.class.name} with ID=#{id}",
-                                 model, "id", record_id)
+                                 model.name, model.to_param_column, record_id)
       end
   end
 end

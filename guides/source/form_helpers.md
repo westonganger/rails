@@ -1081,6 +1081,18 @@ end
 
 As a convenience you can instead pass the symbol `:all_blank` which will create a proc that will reject records where all the attributes are blank excluding any value for `_destroy`.
 
+### Using a non-primary key as the ID attribute
+
+If provide a method on your model `to_param_column` then by default `to_param` will utilize this value of this column to populate the `fields_for` form `[id]` field.
+
+```ruby
+class Person < ApplicationRecord
+  def self.to_param_column
+    :public_id
+  end
+end
+```
+
 ### Adding Fields on the Fly
 
 Rather than rendering multiple sets of fields ahead of time you may wish to add them only when a user clicks on an "Add new address" button. Rails does not provide any built-in support for this. When generating new sets of fields you must ensure the key of the associated array is unique - the current JavaScript date (milliseconds since the [epoch](https://en.wikipedia.org/wiki/Unix_time)) is a common choice.
